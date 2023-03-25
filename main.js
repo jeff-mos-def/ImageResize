@@ -5,6 +5,8 @@ const resizeButton = document.getElementById('resizeButton');
 const downloadLink = document.getElementById('downloadLink');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
+let originalWidth = 0;
+let originalHeight = 0;
 
 inputImage.addEventListener('change', () => {
     const fileReader = new FileReader();
@@ -14,34 +16,37 @@ inputImage.addEventListener('change', () => {
         image.src = e.target.result;
 
         image.onload = () => {
-            canvas.width = image.width;
-            canvas.height = image.height;
+            originalWidth = image.width;
+            originalHeight = image.height;
+            canvas.width = originalWidth;
+            canvas.height = originalHeight;
             ctx.drawImage(image, 0, 0);
-            updateDownloadLink();
         };
     };
 
     fileReader.readAsDataURL(inputImage.files[0]);
 });
 
-widthInput.addEventListener('input', resizeImage);
-heightInput.addEventListener('input', resizeImage);
-
-function resizeImage() {
-    const width = parseInt(widthInput.value);
-    const height = parseInt(heightInput.value);
+resizeButton.addEventListener('click', () => {
+    const newWidth = parseInt(widthInput.value);
+    const newHeight = maintainAspectRatio(newWidth, originalWidth, originalHeight);
+    heightInput.value = newHeight;
     const image = new Image();
     image.src = canvas.toDataURL();
 
     image.onload = () => {
-        canvas.width = width;
-        canvas.height = height;
-        ctx.drawImage(image, 0, 0, width, height);
-        updateDownloadLink();
-    };
-}
+        canvas.width = newWidth;
+        canvas.height = newHeight;
+        ctx.drawImage(image, 0, 0, newWidth, newHeight);
 
-function updateDownloadLink() {
-    downloadLink.href = canvas.toDataURL('image/png');
-    downloadLink.style.display = 'block';
+        // Enable the download link with the resized image data
+        downloadLink.href = canvas.toDataURL('image/png');
+        downloadLink.style.display = 'block';
+    };
+});
+
+function maintainAspectRatio(newWidth, originalWidth, originalHeight) {
+    const aspectRatio = originalHeight / originalWidth;
+    const newHeight = Math.round(newWidth * aspectRatio);
+    return newHeight;
 }
