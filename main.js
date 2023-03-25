@@ -17,13 +17,17 @@ inputImage.addEventListener('change', () => {
             canvas.width = image.width;
             canvas.height = image.height;
             ctx.drawImage(image, 0, 0);
+            updateDownloadLink();
         };
     };
 
     fileReader.readAsDataURL(inputImage.files[0]);
 });
 
-resizeButton.addEventListener('click', () => {
+widthInput.addEventListener('input', resizeImage);
+heightInput.addEventListener('input', resizeImage);
+
+function resizeImage() {
     const width = parseInt(widthInput.value);
     const height = parseInt(heightInput.value);
     const image = new Image();
@@ -33,9 +37,11 @@ resizeButton.addEventListener('click', () => {
         canvas.width = width;
         canvas.height = height;
         ctx.drawImage(image, 0, 0, width, height);
-
-        // Enable the download link with the resized image data
-        downloadLink.href = canvas.toDataURL('image/png');
-        downloadLink.style.display = 'block';
+        updateDownloadLink();
     };
-});
+}
+
+function updateDownloadLink() {
+    downloadLink.href = canvas.toDataURL('image/png');
+    downloadLink.style.display = 'block';
+}
