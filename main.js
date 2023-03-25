@@ -6,8 +6,10 @@ const resizeButton = document.getElementById('resizeButton');
 const downloadLink = document.getElementById('downloadLink');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
+const undoButton = document.getElementById('undoButton');
 let cropping = false;
 let cropStartX, cropStartY, cropEndX, cropEndY;
+let previousCanvasState = null;
 
 inputImage.addEventListener('change', () => {
     const fileReader = new FileReader();
@@ -46,7 +48,29 @@ cropButton.addEventListener('click', () => {
     cropping = !cropping;
 });
 
+undoButton.addEventListener('click', () => {
+    if (previousCanvasState) {
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        tempCtx.drawImage(canvas, 0, 0);
+
+        canvas.width = previousCanvasState.width;
+        canvas.height = previousCanvasState.height;
+        ctx.putImageData(previousCanvasState.data, 0, 0);
+
+        previousCanvasState = {
+            data: tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height),
+            width: tempCanvas.width,
+            height: tempCanvas.height
+        };
+    }
+});
+
 resizeButton.addEventListener('click', () => {
+    saveCanvasState();
+
     const width = parseInt(widthInput.value);
     const height = parseInt(heightInput.value);
     const image = new Image();
@@ -64,6 +88,8 @@ resizeButton.addEventListener('click', () => {
 });
 
 function cropImage() {
+    saveCanvasState();
+
     const width = Math.abs(cropEndX - cropStartX);
     const height = Math.abs(cropEndY - cropStartY);
     const startX = Math.min(cropStartX, cropEndX);
@@ -83,5 +109,13 @@ function cropImage() {
         canvas.width = width;
         canvas.height = height;
         ctx.drawImage(image, 0, 0);
+    };
+}
+
+function saveCanvasState() {
+    previousCanvasState = {
+        data: ctx.getImageData(0, 0, canvas.width, canvas.height),
+        width: canvas.width,
+        height: canvas.height
     };
 }
